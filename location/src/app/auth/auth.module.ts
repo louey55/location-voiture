@@ -6,12 +6,14 @@ import { InscriptionComponent } from './inscription/inscription.component';
 import { SeConnecterComponent } from './se-connecter/se-connecter.component';
 import { FormsModule } from '@angular/forms'; 
 import { HttpClientModule } from '@angular/common/http';
+import { AdminComponent } from './admin/admin.component';
 
 
 @NgModule({
   declarations: [
     InscriptionComponent,
-    SeConnecterComponent
+    SeConnecterComponent,
+    AdminComponent
   ],
   imports: [
     CommonModule,

@@ -12,9 +12,14 @@ class AnnonceLocation(models.Model):
     image = models.ImageField(upload_to='annonces/')
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=False)  # Nouveau champ
+    is_rejected = models.BooleanField(default=False)  # Nouveau champ
 
     def __str__(self):
         return f"{self.marque} {self.modele} - {self.matricule}"
+
+    class Meta:
+        ordering = ['-created_at']
 class Reservation(models.Model):
     vehicle = models.ForeignKey(AnnonceLocation, on_delete=models.CASCADE)
     client = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

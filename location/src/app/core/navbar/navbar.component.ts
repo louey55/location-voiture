@@ -39,4 +39,12 @@ export class NavbarComponent implements OnInit {
     this.menuOpen = false;
     this.cartCount = 0; // Réinitialiser le compteur à la déconnexion
   }
+  testAdminNavigation() {
+    console.log('Current user type:', this.currentUser?.user_type);
+    this.router.navigate(['/admin']).then(success => {
+      console.log('Navigation success:', success);
+    }).catch(err => {
+      console.error('Navigation error:', err);
+    });
+  }
 }

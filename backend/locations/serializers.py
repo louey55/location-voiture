@@ -15,9 +15,9 @@ class AnnonceLocationSerializer(serializers.ModelSerializer):
         model = AnnonceLocation
         fields = ['id', 'marque', 'modele', 'matricule', 'moteur', 
                  'puissance', 'prix', 'zone', 'image', 'image_url', 
-                 'user_email', 'created_at']  # Ajout de 'user_email' ici
+                 'user_email', 'created_at','is_approved', 'is_rejected']  # Ajout de 'user_email' ici
   
-        read_only_fields = ['user', 'created_at', 'image_url', 'user_email']
+        read_only_fields = ['user', 'created_at', 'image_url', 'user_email','is_approved', 'is_rejected']
         
     def validate_image(self, value):
         if value.size > 5 * 1024 * 1024:  # 5MB

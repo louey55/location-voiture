@@ -1,0 +1,41 @@
+<div class="admin-dashboard">
+    <h2>Tableau de bord administrateur</h2>
+    <p>Annonces en attente de validation</p>
+  
+    <div *ngIf="isLoading" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Chargement en cours...</p>
+    </div>
+  
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+  
+    <div *ngIf="!isLoading && annonces.length === 0" class="no-annonces">
+      <p>Aucune annonce en attente de validation</p>
+    </div>
+  
+    <div class="annonce-list" *ngIf="!isLoading && annonces.length > 0">
+      <div *ngFor="let annonce of annonces" class="annonce-card">
+        <div class="annonce-image">
+          <img [src]="annonce.image_url" [alt]="annonce.marque + ' ' + annonce.modele">
+        </div>
+        <div class="annonce-details">
+          <h3>{{ annonce.marque }} {{ annonce.modele }}</h3>
+          <ul>
+            <li><strong>Matricule:</strong> {{ annonce.matricule }}</li>
+            <li><strong>Moteur:</strong> {{ annonce.moteur }}</li>
+            <li><strong>Puissance:</strong> {{ annonce.puissance }} CV</li>
+            <li><strong>Prix/jour:</strong> {{ annonce.prix }} DT</li>
+            <li><strong>Zone:</strong> {{ annonce.zone }}</li>
+            <li><strong>Publiée par:</strong> {{ annonce.user_email }}</li>
+          </ul>
+          
+          <div class="action-buttons">
+            <button (click)="approveAnnonce(annonce.id)" class="approve-btn">Approuver</button>
+            <button (click)="rejectAnnonce(annonce.id)" class="reject-btn">Rejeter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

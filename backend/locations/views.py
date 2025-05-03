@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import AnnonceLocation, Reservation
 from .serializers import AnnonceLocationSerializer, ReservationSerializer
 from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
 
 User = get_user_model()
 
@@ -13,8 +14,10 @@ class PublicAnnonceList(generics.ListAPIView):
     permission_classes = [AllowAny]
     
     def get_queryset(self):
-        return AnnonceLocation.objects.all().order_by('-created_at').select_related('user')
-    
+        return AnnonceLocation.objects.filter(
+            is_approved=True,
+            is_rejected=False
+        ).order_by('-created_at').select_related('user')
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
@@ -98,3 +101,68 @@ class ReservationDetail(generics.RetrieveUpdateDestroyAPIView):
                 message="Vous n'avez pas accès à cette réservation",
                 code=status.HTTP_403_FORBIDDEN
             )
+class AdminAnnonceList(generics.ListAPIView):
+    serializer_class = AnnonceLocationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Seul l'admin peut accéder à cette vue
+        if not self.request.user.is_superuser:
+            raise PermissionDenied("Vous n'avez pas la permission d'accéder à cette ressource")
+        
+        return AnnonceLocation.objects.filter(
+            is_approved=False,
+            is_rejected=False
+        ).order_by('-created_at').select_related('user')
+
+class AdminApproveAnnonce(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, pk):
+        if not request.user.is_superuser:
+            return Response(
+                {"detail": "Permission refusée"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            annonce = AnnonceLocation.objects.get(pk=pk)
+        except AnnonceLocation.DoesNotExist:
+            return Response(
+                {"detail": "Annonce non trouvée"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        annonce.is_approved = True
+        annonce.save()
+        
+        return Response(
+            {"detail": "Annonce approuvée avec succès"},
+            status=status.HTTP_200_OK
+        )
+
+class AdminRejectAnnonce(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, pk):
+        if not request.user.is_superuser:
+            return Response(
+                {"detail": "Permission refusée"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            annonce = AnnonceLocation.objects.get(pk=pk)
+        except AnnonceLocation.DoesNotExist:
+            return Response(
+                {"detail": "Annonce non trouvée"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        annonce.is_rejected = True
+        annonce.save()
+        
+        return Response(
+            {"detail": "Annonce rejetée avec succès"},
+            status=status.HTTP_200_OK
+        )            

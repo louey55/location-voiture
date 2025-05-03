@@ -30,6 +30,12 @@
             <span class="badge bg-danger" *ngIf="cartCount > 0">{{ cartCount }}</span>
           </a>
         </li>
+        <!-- Ajoutez cette partie dans le ng-container pour les utilisateurs connectés -->
+        <li *ngIf="currentUser?.user_type === 'Admin'">
+          <a routerLink="/admin" (click)="testAdminNavigation()" data-hover="Dashboard Admin" class="connecter">
+            Dashboard Admin
+          </a>
+        </li>
       </ng-container>
       
       <ng-template #notLoggedIn>
