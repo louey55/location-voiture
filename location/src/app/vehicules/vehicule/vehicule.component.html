@@ -1,7 +1,17 @@
 <section class="vehicles-page">
   <div class="container">
     <h1 class="page-title">Nos Véhicules Disponibles</h1>
-    
+
+    <!-- Barre de recherche -->
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Rechercher par nom, marque ou modèle..."
+        [(ngModel)]="searchText"
+        class="form-control"
+      />
+    </div>
+
     <div *ngIf="isLoading" class="loading-spinner">
       <div class="spinner"></div>
       <p>Chargement en cours...</p>
@@ -13,12 +23,12 @@
     </div>
 
     <div *ngIf="!isLoading && !errorMessage">
-      <div *ngIf="vehicles.length === 0" class="no-vehicles">
+      <div *ngIf="filteredVehicles().length === 0" class="no-vehicles">
         <p>Aucun véhicule disponible pour le moment</p>
       </div>
 
-      <div class="vehicle-grid" *ngIf="vehicles.length > 0">
-        <div *ngFor="let vehicle of vehicles" class="vehicle-card" [class.expanded]="expandedCardId === vehicle.id">
+      <div class="vehicle-grid" *ngIf="filteredVehicles().length > 0">
+        <div *ngFor="let vehicle of filteredVehicles()" class="vehicle-card" [class.expanded]="expandedCardId === vehicle.id">
           <div class="vehicle-image">
             <img [src]="vehicle.image" [alt]="vehicle.marque + ' ' + vehicle.modele">
           </div>
@@ -60,3 +70,38 @@
     </div>
   </div>
 </section>
+
+<style>
+.search-bar {
+  display: flex;
+  justify-content: center;
+  margin: 32px 0 24px 0;
+}
+
+.search-bar input.form-control {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 18px;
+  border: 1.5px solid #1976d2;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  background: #f8fafc;
+}
+
+.search-bar input.form-control:focus {
+  border-color: #1565c0;
+  box-shadow: 0 0 0 2px #1976d233;
+  background: #fff;
+}
+
+@media (max-width: 600px) {
+  .search-bar input.form-control {
+    max-width: 100%;
+    font-size: 1rem;
+    padding: 10px 12px;
+  }
+}
+</style>

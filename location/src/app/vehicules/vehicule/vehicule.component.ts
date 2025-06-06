@@ -18,6 +18,7 @@ export class VehiculeComponent implements OnInit {
     date_fin: '',
     telephone: ''
   };
+  searchText: string = '';
 
   constructor(
     private sharedService: SharedService,
@@ -86,5 +87,15 @@ export class VehiculeComponent implements OnInit {
         console.error('Erreur lors de la réservation:', error);
       }
     });
+  }
+
+  filteredVehicles() {
+    if (!this.searchText) return this.vehicles;
+    const txt = this.searchText.toLowerCase();
+    return this.vehicles.filter(v =>
+      (v.marque && v.marque.toLowerCase().includes(txt)) ||
+      (v.modele && v.modele.toLowerCase().includes(txt)) ||
+      (v.nom && v.nom.toLowerCase().includes(txt))
+    );
   }
 }

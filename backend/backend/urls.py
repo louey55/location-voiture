@@ -7,8 +7,10 @@ from rest_framework_simplejwt.views import (
 )
 from users.views import RegisterView, LoginView
 from locations.views import (
+    AgencyReservationsList,
     AnnonceLocationListCreate, 
     AnnonceLocationDetail,
+    ConfirmReservation,
     PublicAnnonceList,
     ReservationListCreate,
     ReservationDetail,
@@ -29,7 +31,7 @@ urlpatterns = [
     path('api/auth/login/', LoginView.as_view(), name='login'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    
+    path('api/agency/reservations/', AgencyReservationsList.as_view(), name='agency-reservations'),
     # Annonces
     path('api/annonces/public/', PublicAnnonceList.as_view(), name='public-annonce-list'),
     path('api/annonces/', AnnonceLocationListCreate.as_view(), name='annonce-list'),
@@ -41,4 +43,5 @@ urlpatterns = [
     # Réservations (nouvelles URLs)
     path('api/reservations/', ReservationListCreate.as_view(), name='reservation-list'),
     path('api/reservations/<int:pk>/', ReservationDetail.as_view(), name='reservation-detail'),
+    path('api/reservations/<int:pk>/confirm/', ConfirmReservation.as_view(), name='confirm-reservation'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

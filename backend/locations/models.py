@@ -30,4 +30,14 @@ class Reservation(models.Model):
     is_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Reservation #{self.id} - {self.vehicle.marque} {self.vehicle.modele}"    
+        return f"Reservation #{self.id} - {self.vehicle.marque} {self.vehicle.modele}"
+class Vehicule(models.Model):
+    nom = models.CharField(max_length=100)
+    marque = models.CharField(max_length=100)
+    modele = models.CharField(max_length=100)
+    matricule = models.CharField(max_length=50)
+    moteur = models.CharField(max_length=50)
+    puissance = models.IntegerField()
+    prix = models.DecimalField(max_digits=10, decimal_places=2)
+    zone = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='vehicules/')

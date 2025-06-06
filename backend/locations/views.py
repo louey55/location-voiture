@@ -1,12 +1,12 @@
-from rest_framework import generics, permissions, status, filters
+from rest_framework import generics, permissions, status, filters, viewsets
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import AnnonceLocation, Reservation
-from .serializers import AnnonceLocationSerializer, ReservationSerializer
+from .models import AnnonceLocation, Reservation, Vehicule
+from .serializers import AnnonceLocationSerializer, ReservationSerializer, VehiculeSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
-
+from rest_framework.exceptions import PermissionDenied
 User = get_user_model()
 
 class PublicAnnonceList(generics.ListAPIView):
@@ -165,4 +165,56 @@ class AdminRejectAnnonce(APIView):
         return Response(
             {"detail": "Annonce rejetée avec succès"},
             status=status.HTTP_200_OK
-        )            
+        )        
+class AgencyReservationsList(generics.ListAPIView):
+    serializer_class = ReservationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.user_type != 'Agence':
+            raise PermissionDenied("Seules les agences peuvent accéder à cette ressource")
+        
+        return Reservation.objects.filter(
+            vehicle__user=self.request.user
+        ).select_related('vehicle', 'client').order_by('-created_at')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+class ConfirmReservation(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            reservation = Reservation.objects.get(pk=pk)
+        except Reservation.DoesNotExist:
+            return Response(
+                {"detail": "Réservation non trouvée"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Vérifier que l'utilisateur est bien le propriétaire du véhicule
+        if reservation.vehicle.user != request.user:
+            return Response(
+                {"detail": "Vous n'avez pas la permission de confirmer cette réservation"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        reservation.is_confirmed = True
+        reservation.save()
+
+        return Response(
+            {"detail": "Réservation confirmée avec succès"},
+            status=status.HTTP_200_OK
+        )
+class VehiculeViewSet(viewsets.ModelViewSet):
+    queryset = Vehicule.objects.all()
+    serializer_class = VehiculeSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['nom', 'marque', 'modele']
+
+class ReservationViewSet(viewsets.ModelViewSet):
+    queryset = Reservation.objects.all()
+    serializer_class = ReservationSerializer
+    permission_classes = [AllowAny]

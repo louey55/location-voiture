@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, forkJoin, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, forkJoin, Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
@@ -13,7 +13,7 @@ export class SharedService {
   private cartCount = new BehaviorSubject<number>(0);
 
   constructor(
-    private http: HttpClient,
+    public http: HttpClient,
     private authService: AuthService,
     private router: Router
   ) { }
@@ -22,12 +22,10 @@ export class SharedService {
     return this.APIUrl;
   }
 
-  private getJsonAuthHeaders(): HttpHeaders {
+  public getJsonAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
-      this.authService.logout();
-      this.router.navigate(['/se-connecter']);
-      throw new Error('Aucun token d\'authentification disponible');
+      return new HttpHeaders();
     }
     
     return new HttpHeaders({
@@ -39,19 +37,14 @@ export class SharedService {
   private getFormDataAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
-      this.authService.logout();
-      this.router.navigate(['/se-connecter']);
-      throw new Error('Aucun token d\'authentification disponible');
+      return new HttpHeaders();
     }
     
-    // Ne pas mettre Content-Type pour FormData, le navigateur le définira automatiquement
-    // avec le bon boundary
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
   }
 
-  // Endpoint public pour récupérer les annonces
   getAnnonces(): Observable<any> {
     return this.http.get(`${this.APIUrl}/api/annonces/public/`).pipe(
       catchError(error => {
@@ -65,7 +58,6 @@ export class SharedService {
     );
   }
 
-  // Endpoint protégé pour créer une annonce (avec FormData)
   addAnnonce(formData: FormData): Observable<any> {
     const headers = this.getFormDataAuthHeaders();
     
@@ -81,7 +73,6 @@ export class SharedService {
     );
   }
 
-  // Gestion des erreurs 401 (token expiré)
   private handle401Error(retryFn: () => Observable<any>): Observable<any> {
     return this.authService.refreshToken().pipe(
       switchMap(() => {
@@ -96,7 +87,6 @@ export class SharedService {
     );
   }
 
-  // Gestion générique des erreurs
   private handleError(error: HttpErrorResponse): Error {
     console.error('Erreur API:', error);
     
@@ -117,10 +107,17 @@ export class SharedService {
   }
 
   getReservations(): Observable<any> {
+    const token = this.authService.getToken();
+    if (!token) {
+      return of([]);
+    }
+
     const headers = this.getJsonAuthHeaders();
     return this.http.get(`${this.APIUrl}/api/reservations/`, { headers }).pipe(
       switchMap((reservations: any) => {
-        // Pour chaque réservation, récupérer les détails complets du véhicule
+        if (!reservations || reservations.length === 0) {
+          return of([]);
+        }
         const detailedReservations = reservations.map((reservation: any) => {
           return this.http.get(`${this.APIUrl}/api/annonces/${reservation.vehicle}/`, { headers }).pipe(
             map((vehicleDetails: any) => ({
@@ -133,7 +130,7 @@ export class SharedService {
       }),
       catchError(error => {
         console.error('Error loading reservations:', error);
-        return throwError(() => error);
+        return of([]);
       })
     );
   }
@@ -143,7 +140,6 @@ export class SharedService {
     return this.http.delete(`${this.APIUrl}/api/reservations/${id}/`, { headers });
   }
 
-  // Méthodes pour le panier
   getCartCount(): Observable<number> {
     this.updateCartCount();
     return this.cartCount.asObservable();
@@ -152,11 +148,53 @@ export class SharedService {
   updateCartCount(): void {
     this.getReservations().subscribe({
       next: (reservations) => {
-        this.cartCount.next(reservations.length);
+        this.cartCount.next(reservations?.length || 0);
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement des réservations:', error);
+      error: () => {
+        this.cartCount.next(0);
       }
     });
+  }
+
+  getAgencyReservations(): Observable<any> {
+    const token = this.authService.getToken();
+    if (!token) {
+      return of([]);
+    }
+  
+    const headers = this.getJsonAuthHeaders();
+    return this.http.get(`${this.APIUrl}/api/agency/reservations/`, { headers }).pipe(
+      switchMap((reservations: any) => {
+        if (!reservations || reservations.length === 0) {
+          return of([]);
+        }
+        
+        // Supprimez la partie qui cherche les détails du client via /api/users/
+        // Utilisez directement les données retournées par l'API
+        const detailedReservations = reservations.map((reservation: any) => ({
+          ...reservation,
+          client: {
+            first_name: reservation.client_first_name,
+            last_name: reservation.client_last_name,
+            email: reservation.client_email
+          }
+        }));
+        
+        return of(detailedReservations);
+      }),
+      catchError(error => {
+        console.error('Error loading agency reservations:', error);
+        return of([]);
+      })
+    );
+  }
+
+  confirmAgencyReservation(reservationId: number): Observable<any> {
+    const headers = this.getJsonAuthHeaders();
+    return this.http.patch(
+      `${this.APIUrl}/api/reservations/${reservationId}/confirm/`,
+      {},
+      { headers }
+    );
   }
 }

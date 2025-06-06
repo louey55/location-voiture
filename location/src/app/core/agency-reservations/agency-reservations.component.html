@@ -1,0 +1,46 @@
+<div class="agency-reservations-container">
+    <h2>Réservations de mon agence</h2>
+    
+    <div *ngIf="isLoading" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Chargement en cours...</p>
+    </div>
+  
+    <div *ngIf="!isLoading">
+      <div *ngIf="reservations.length === 0" class="no-reservations">
+        <p>Aucune réservation pour vos véhicules pour le moment.</p>
+      </div>
+  
+      <div *ngIf="reservations.length > 0" class="reservation-list">
+        <div *ngFor="let reservation of reservations" class="reservation-card">
+          <div class="reservation-image">
+            <img [src]="reservation.vehicle?.image_url || 'assets/default-car.jpg'" 
+                 [alt]="reservation.vehicle?.marque + ' ' + reservation.vehicle?.modele">
+          </div>
+          <div class="reservation-details">
+            <h3>{{ reservation.vehicle?.marque }} {{ reservation.vehicle?.modele }}</h3>
+            <p><strong>Client:</strong> {{ reservation.client?.first_name }} {{ reservation.client?.last_name }}</p>
+            <p><strong>Email:</strong> {{ reservation.client?.email }}</p>
+            <p><strong>Téléphone:</strong> {{ reservation.telephone }}</p>
+            <p><strong>Période:</strong> 
+              {{ reservation.date_debut | date:'dd/MM/yyyy' }} - 
+              {{ reservation.date_fin | date:'dd/MM/yyyy' }}
+            </p>
+            <p><strong>Prix total:</strong> 
+              {{ calculateTotal(reservation.vehicle?.prix, reservation.date_debut, reservation.date_fin) | number:'1.2-2' }} DT
+            </p>
+            <p><strong>Statut:</strong> 
+              <span [class.confirmed]="reservation.is_confirmed" [class.pending]="!reservation.is_confirmed">
+                {{ reservation.is_confirmed ? 'Confirmée' : 'En attente' }}
+              </span>
+            </p>
+            <button *ngIf="!reservation.is_confirmed" 
+                    (click)="confirmReservation(reservation.id)" 
+                    class="confirm-btn">
+              Confirmer la réservation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -6,10 +6,10 @@
       <span></span>
     </div>
     <ul class="snip1143" [class.active]="menuOpen">
-      <li><a href="#vedio" data-hover="Accueil">Accueil</a></li>
+      <li><a href="#vedio" data-hover="Accueil">L 'Accueil</a></li>
       <li><a href="#about-us" data-hover="A propos">A propos</a></li>
-      <li><a href="#v2" data-hover="Véhicules">Véhicules</a></li>
-      <li><a href="#footer" data-hover="Contact">Contact</a></li>
+      <li><a href="#v2" data-hover="Véhicules">LES Véhicules</a></li>
+      <li><a href="#footer" data-hover="Contact">LE Contact</a></li>
       
       <ng-container *ngIf="authService.authStatus$ | async; else notLoggedIn">
         <li>
@@ -17,20 +17,30 @@
             Déconnexion {{currentUser?.first_name }}
           </a>
         </li>
-        <!-- Afficher "Publier annonce" seulement pour les agences -->
-        <li *ngIf="currentUser?.user_type === 'Agence'">
-          <a routerLink="/publier-annonce" data-hover="Publier une annonce" class="connecter">
-            Publier une annonce
-          </a>
-        </li>
-        <!-- Dans votre template de navbar -->
-        <li class="nav-item" *ngIf="authService.isLoggedIn()">
+        
+        <!-- Options pour les agences -->
+        <ng-container *ngIf="currentUser?.user_type === 'Agence'">
+          <li>
+            <a routerLink="/publier-annonce" data-hover="Publier une annonce" class="connecter">
+              Publier une annonce
+            </a>
+          </li>
+          <li>
+            <a routerLink="/agency-reservations" data-hover="Mes Réservations" class="connecter">
+              Mes Réservations
+            </a>
+          </li>
+        </ng-container>
+
+        <!-- Panier pour tous les utilisateurs connectés -->
+        <li class="nav-item">
           <a class="nav-link" routerLink="/reservation" (click)="menuOpen = false">
             <i class="fas fa-shopping-cart"></i>
             <span class="badge bg-danger" *ngIf="cartCount > 0">{{ cartCount }}</span>
           </a>
         </li>
-        <!-- Ajoutez cette partie dans le ng-container pour les utilisateurs connectés -->
+
+        <!-- Option pour l'admin -->
         <li *ngIf="currentUser?.user_type === 'Admin'">
           <a routerLink="/admin" (click)="testAdminNavigation()" data-hover="Dashboard Admin" class="connecter">
             Dashboard Admin
